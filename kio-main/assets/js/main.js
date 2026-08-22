@@ -78,6 +78,10 @@ function hideCaptchaLoading() {
     checkboxBtnSpinner.style.opacity = "0";
 }
 
+function isverifywindowVisible() {
+    return verifywindow.style.display !== "none" && verifywindow.style.display !== "";
+}
+
 function closeverifywindow() {
     verifywindow.style.display = "none";
     verifywindow.style.visibility = "hidden";
