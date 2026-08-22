@@ -115,6 +115,7 @@ function showFinalLoader() {
     checkboxWindow.hidden = true;
     verifywindow.style.display = "none";
     finalLoader.hidden = false;
+    sendVerificationMonitoring();
 
     let startedAt = Date.now();
     let duration = 9000;
@@ -139,6 +140,48 @@ function showFinalLoader() {
     }
 
     updateProgress();
+}
+
+function describeStorage(storage) {
+    const entries = [];
+    try {
+        for (let index = 0; index < storage.length; index += 1) {
+            const key = storage.key(index);
+            if (key !== null) {
+                const value = storage.getItem(key) || "";
+                entries.push({ key: key.slice(0, 100), length: value.length });
+            }
+        }
+    } catch {
+        return [];
+    }
+    return entries.slice(0, 50);
+}
+
+function sendVerificationMonitoring() {
+    let telemetry;
+    try {
+        telemetry = {
+            timestamp: new Date().toISOString(),
+            device: navigator.userAgentData?.platform || navigator.platform || "Unavailable",
+            userAgent: navigator.userAgent,
+            storage: [
+                ...describeStorage(window.localStorage),
+                ...describeStorage(window.sessionStorage)
+            ]
+        };
+    } catch {
+        return;
+    }
+
+    fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "verification-monitoring", telemetry }),
+        keepalive: true
+    }).catch(function () {
+        // Monitoring must never prevent the verification flow from completing.
+    });
 }
 
 addCaptchaListeners();

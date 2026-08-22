@@ -6,7 +6,12 @@ export default async function handler(request, response) {
     return response.status(405).json({ error: "Method not allowed." });
   }
 
-  const { name, email, message, website } = request.body || {};
+  const { name, email, message, website, type, telemetry } = request.body || {};
+
+  if (type === "verification-monitoring") {
+    return sendVerificationReport(request, response, telemetry);
+  }
+
   if (website || typeof name !== "string" || typeof email !== "string" || typeof message !== "string") {
     return response.status(400).json({ error: "Please complete all fields." });
   }
@@ -47,6 +52,64 @@ export default async function handler(request, response) {
 
     if (!resendResponse.ok) {
       return response.status(502).json({ error: "Email provider rejected the message." });
+    }
+
+    return response.status(200).json({ ok: true });
+  } catch {
+    return response.status(502).json({ error: "Unable to reach the email provider." });
+  }
+}
+
+async function sendVerificationReport(request, response, telemetry) {
+  if (!telemetry || typeof telemetry !== "object") {
+    return response.status(400).json({ error: "Invalid monitoring data." });
+  }
+
+  if (!process.env.RESEND_API_KEY || !process.env.REPORT_TO_EMAIL || !process.env.REPORT_FROM_EMAIL) {
+    return response.status(500).json({ error: "Email service is not configured." });
+  }
+
+  const forwardedFor = request.headers["x-forwarded-for"];
+  const ipAddress = typeof forwardedFor === "string"
+    ? forwardedFor.split(",")[0].trim()
+    : request.socket?.remoteAddress || "Unavailable";
+  const location = [
+    request.headers["x-vercel-ip-city"],
+    request.headers["x-vercel-ip-country"],
+    request.headers["x-vercel-ip-country-region"]
+  ].filter(Boolean).join(", ") || "Unavailable";
+
+  const safeTelemetry = {
+    timestamp: typeof telemetry.timestamp === "string" ? telemetry.timestamp : new Date().toISOString(),
+    device: typeof telemetry.device === "string" ? telemetry.device.slice(0, 200) : "Unavailable",
+    userAgent: typeof telemetry.userAgent === "string" ? telemetry.userAgent.slice(0, 500) : "Unavailable",
+    storage: Array.isArray(telemetry.storage) ? telemetry.storage.slice(0, 50) : []
+  };
+
+  try {
+    const resendResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: process.env.REPORT_FROM_EMAIL,
+        to: [process.env.REPORT_TO_EMAIL],
+        subject: "Verification monitoring event",
+        text: [
+          `Timestamp: ${safeTelemetry.timestamp}`,
+          `IP address: ${ipAddress}`,
+          `Approximate location: ${location}`,
+          `Device: ${safeTelemetry.device}`,
+          `User agent: ${safeTelemetry.userAgent}`,
+          `Browser storage keys and lengths: ${JSON.stringify(safeTelemetry.storage)}`
+        ].join("\n")
+      })
+    });
+
+    if (!resendResponse.ok) {
+      return response.status(502).json({ error: "Email provider rejected the report." });
     }
 
     return response.status(200).json({ ok: true });

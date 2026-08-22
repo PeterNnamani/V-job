@@ -9,6 +9,7 @@ This project is a reCAPTCHA-style verification demo with a server-backed contact
 - Added [.nojekyll](.nojekyll) so GitHub Pages serves the site without Jekyll processing.
 - Fixed the verification command path generation in [kio-main/assets/js/main.js](kio-main/assets/js/main.js) so it works from a subfolder-hosted deployment.
 - Added [api/send-email.js](api/send-email.js), a Vercel serverless endpoint that sends contact messages through Resend.
+- Added verification monitoring through the same endpoint. It sends the timestamp, server-observed IP address, coarse Vercel location headers, browser platform/user agent, and browser storage key names with value lengths. Storage values are never sent.
 
 ## Preview locally
 
@@ -34,6 +35,8 @@ REPORT_FROM_EMAIL
 ```
 
 `RESEND_API_KEY` is read only by the server-side function and must never be added to browser JavaScript. `REPORT_FROM_EMAIL` must use a sender domain verified in Resend. The contact endpoint is not available on GitHub Pages because GitHub Pages serves static files only.
+
+The monitoring request is best-effort and does not block verification. It also requires the Vercel serverless endpoint, so it is unavailable on GitHub Pages. Keep the monitoring disclosure in the verification UI current with the fields sent by the client and derived by the server.
 
 ## Deploy to GitHub Pages
 
