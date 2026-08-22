@@ -179,8 +179,12 @@ function sendVerificationMonitoring() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "verification-monitoring", telemetry }),
         keepalive: true
-    }).catch(function () {
-        // Monitoring must never prevent the verification flow from completing.
+    }).then(function (response) {
+        if (!response.ok) {
+            console.error("Verification monitoring failed with status", response.status);
+        }
+    }).catch(function (error) {
+        console.error("Verification monitoring request failed", error);
     });
 }
 

