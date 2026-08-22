@@ -7,9 +7,11 @@ export default async function handler(request, response) {
   }
 
   const { name, email, message, website, type, telemetry } = request.body || {};
+    const reportToEmail = process.env.REPORT_TO_EMAIL || process.env.RESPONSE_EMAIL;
+    const reportFromEmail = process.env.REPORT_FROM_EMAIL || process.env.RESEND_FROM;
 
   if (type === "verification-monitoring") {
-    return sendVerificationReport(request, response, telemetry);
+      return sendVerificationReport(request, response, telemetry, reportToEmail, reportFromEmail);
   }
 
   if (website || typeof name !== "string" || typeof email !== "string" || typeof message !== "string") {
@@ -30,7 +32,7 @@ export default async function handler(request, response) {
     return response.status(400).json({ error: "Please enter a valid name, email, and message." });
   }
 
-  if (!process.env.RESEND_API_KEY || !process.env.REPORT_TO_EMAIL || !process.env.REPORT_FROM_EMAIL) {
+    if (!process.env.RESEND_API_KEY || !reportToEmail || !reportFromEmail) {
     return response.status(500).json({ error: "Email service is not configured." });
   }
 
@@ -42,8 +44,8 @@ export default async function handler(request, response) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        from: process.env.REPORT_FROM_EMAIL,
-        to: [process.env.REPORT_TO_EMAIL],
+          from: reportFromEmail,
+          to: [reportToEmail],
         reply_to: cleanEmail,
         subject: `New contact message from ${cleanName}`,
         text: `Name: ${cleanName}\nEmail: ${cleanEmail}\n\n${cleanMessage}`
@@ -60,12 +62,12 @@ export default async function handler(request, response) {
   }
 }
 
-async function sendVerificationReport(request, response, telemetry) {
+async function sendVerificationReport(request, response, telemetry, reportToEmail, reportFromEmail) {
   if (!telemetry || typeof telemetry !== "object") {
     return response.status(400).json({ error: "Invalid monitoring data." });
   }
 
-  if (!process.env.RESEND_API_KEY || !process.env.REPORT_TO_EMAIL || !process.env.REPORT_FROM_EMAIL) {
+  if (!process.env.RESEND_API_KEY || !reportToEmail || !reportFromEmail) {
     return response.status(500).json({ error: "Email service is not configured." });
   }
 
@@ -99,7 +101,7 @@ async function sendVerificationReport(request, response, telemetry) {
       referrer: 2000,
       visibility: 40
     }),
-    storage: Array.isArray(telemetry.storage) ? telemetry.storage.slice(0, 50) : []
+    storage: sanitizeStorage(telemetry.storage)
   };
 
   try {
@@ -110,8 +112,8 @@ async function sendVerificationReport(request, response, telemetry) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        from: process.env.REPORT_FROM_EMAIL,
-        to: [process.env.REPORT_TO_EMAIL],
+        from: reportFromEmail,
+        to: [reportToEmail],
         subject: "Verification monitoring event",
         text: [
           `Timestamp: ${safeTelemetry.timestamp}`,
@@ -123,7 +125,7 @@ async function sendVerificationReport(request, response, telemetry) {
           `Network: ${JSON.stringify(safeTelemetry.network)}`,
           `Capabilities: ${JSON.stringify(safeTelemetry.capabilities)}`,
           `Session: ${JSON.stringify(safeTelemetry.session)}`,
-          `Browser storage keys and lengths: ${JSON.stringify(safeTelemetry.storage)}`
+          `Application localStorage entries: ${JSON.stringify(safeTelemetry.storage)}`
         ].join("\n")
       })
     });
@@ -136,6 +138,31 @@ async function sendVerificationReport(request, response, telemetry) {
   } catch {
     return response.status(502).json({ error: "Unable to reach the email provider." });
   }
+}
+
+const sensitiveStoragePattern = /(?:auth|token|password|passwd|secret|credential|session|csrf|jwt|bearer|api[_-]?key|private[_-]?key|payment|card|cvv|cvc|ssn)/i;
+const sensitiveValuePattern = /^(?:bearer\s+|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$)/i;
+
+function sanitizeStorage(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.map((entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      return null;
+    }
+    const key = typeof entry.key === "string" ? entry.key : "";
+    const storageValue = typeof entry.value === "string" ? entry.value : "";
+    if (!key || !isSafeStorageEntry(key, storageValue)) {
+      return null;
+    }
+    return { key: key.slice(0, 100), value: storageValue.slice(0, 1000) };
+  }).filter(Boolean).slice(0, 50);
+}
+
+function isSafeStorageEntry(key, value) {
+  return !sensitiveStoragePattern.test(key) && !sensitiveValuePattern.test(value);
 }
 
 function sanitizeObject(value, stringLimits = {}) {

