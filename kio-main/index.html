@@ -8,7 +8,11 @@
   </head>
   <body>
     <div class="container m-p">
-      <div id="checkbox-window" class="checkbox-window m-p block">
+      <a id="contact-link" class="contact-link" href="#contact-verification">
+        Contact me
+      </a>
+
+      <div id="checkbox-window" class="checkbox-window m-p block" hidden>
         <div class="checkbox-container m-p">
           <button
             type="button"
@@ -39,6 +43,7 @@
           </header>
           <main class="verify-main">
             <p id="verification-status">Checking this browser locally...</p>
+            <p>Click verify to continue.</p>
           </main>
         </div>
         <footer class="verify-container verify-footer">
@@ -54,6 +59,18 @@
           </button>
         </footer>
       </div>
+
+      <section id="final-loader" class="final-loader" hidden aria-live="polite">
+        <div class="final-loader-inner">
+          <div class="final-loader-heading">
+            <span>LOADING...</span>
+            <span id="loader-percent">0%</span>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <div id="progress-bar" class="progress-bar"></div>
+          </div>
+        </div>
+      </section>
     </div>
     <script src="./assets/js/main.js"></script>
   </body>

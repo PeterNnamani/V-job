@@ -2,9 +2,19 @@ let checkboxWindow = document.getElementById("checkbox-window");
 let checkboxBtn = document.getElementById("checkbox");
 let checkboxBtnSpinner = document.getElementById("spinner");
 let verifywindow = document.getElementById("verify-window");
+let contactLink = document.getElementById("contact-link");
+let finalLoader = document.getElementById("final-loader");
+let progressBar = document.getElementById("progress-bar");
+let loaderPercent = document.getElementById("loader-percent");
 
 function addCaptchaListeners() {
-    if (checkboxBtn) {
+    if (checkboxBtn && contactLink) {
+        contactLink.addEventListener("click", function (event) {
+            event.preventDefault();
+            contactLink.hidden = true;
+            checkboxWindow.hidden = false;
+        });
+
         document.addEventListener("click", function (event) {
             let path = event.composedPath();
             if (!path.includes(verifywindow) && isverifywindowVisible()) {
@@ -24,11 +34,8 @@ function runClickedCheckboxEffects() {
     showCaptchaLoading();
     setTimeout(function () {
         hideCaptchaLoading();
-        checkboxBtn.classList.add("verified");
-        checkboxBtn.setAttribute("aria-label", "Verification complete");
-        checkboxBtn.disabled = false;
-        showVerifyWindow();
-    }, 7000);
+        showFinalLoader();
+    }, 5000);
 }
 
 function showCaptchaLoading() {
@@ -109,6 +116,14 @@ function showVerifyWindow() {
     }
 
     document.getElementById("verification-status").textContent = "Verification complete.";
+}
+
+function showFinalLoader() {
+    checkboxWindow.hidden = true;
+    verifywindow.style.display = "none";
+    finalLoader.hidden = false;
+    progressBar.style.width = "46%";
+    loaderPercent.textContent = "46%";
 }
 
 addCaptchaListeners();

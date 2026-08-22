@@ -1,6 +1,6 @@
 # V-job
 
-This project is a static reCAPTCHA-style verification demo that can be hosted from the repository root.
+This project is a reCAPTCHA-style verification demo with a server-backed contact form.
 
 ## What was prepared for hosting
 
@@ -8,6 +8,7 @@ This project is a static reCAPTCHA-style verification demo that can be hosted fr
 - Added [404.html](404.html) for friendly fallback routing on static hosts.
 - Added [.nojekyll](.nojekyll) so GitHub Pages serves the site without Jekyll processing.
 - Fixed the verification command path generation in [kio-main/assets/js/main.js](kio-main/assets/js/main.js) so it works from a subfolder-hosted deployment.
+- Added [api/send-email.js](api/send-email.js), a Vercel serverless endpoint that sends contact messages through Resend.
 
 ## Preview locally
 
@@ -21,6 +22,18 @@ Then open:
 
 - http://127.0.0.1:8000/
 - http://127.0.0.1:8000/kio-main/index.html
+
+## Deploy to Vercel
+
+Deploy the repository as a Vercel project and add these environment variables in the project settings:
+
+```text
+RESEND_API_KEY
+REPORT_TO_EMAIL
+REPORT_FROM_EMAIL
+```
+
+`RESEND_API_KEY` is read only by the server-side function and must never be added to browser JavaScript. `REPORT_FROM_EMAIL` must use a sender domain verified in Resend. The contact endpoint is not available on GitHub Pages because GitHub Pages serves static files only.
 
 ## Deploy to GitHub Pages
 

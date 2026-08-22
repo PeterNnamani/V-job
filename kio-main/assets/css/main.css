@@ -7,6 +7,10 @@ body {
     background-color: #f7f7f7;
   }
 
+  [hidden] {
+    display: none !important;
+  }
+
   .container {
     font-family: Roboto, helvetica, arial, sans-serif;
     position: relative;
@@ -14,6 +18,16 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .contact-link {
+    color: #1a73e8;
+    font: 600 16px Roboto, helvetica, arial, sans-serif;
+    text-decoration: none;
+  }
+
+  .contact-link:hover {
+    text-decoration: underline;
   }
   
   .m-p {
@@ -192,6 +206,94 @@ body {
     padding: 5px;
     color: #111;
     font-size: 13px;
+  }
+
+  .contact-form {
+    display: grid;
+    gap: 6px;
+    margin-top: 14px;
+  }
+
+  .contact-form input,
+  .contact-form textarea {
+    box-sizing: border-box;
+    border: 1px solid #c6c6c6;
+    border-radius: 2px;
+    font: inherit;
+    padding: 7px;
+    width: 100%;
+  }
+
+  .contact-form textarea {
+    resize: vertical;
+  }
+
+  .contact-form button {
+    background: #1a73e8;
+    border: 0;
+    border-radius: 3px;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+    padding: 9px;
+  }
+
+  .contact-form button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+  }
+
+  .contact-honeypot {
+    position: absolute;
+    left: -9999px;
+  }
+
+  .contact-feedback {
+    margin: 2px 0 0;
+    min-height: 16px;
+  }
+
+  .contact-feedback.success {
+    color: #137333;
+  }
+
+  .contact-feedback.error {
+    color: #b3261e;
+  }
+
+  .final-loader {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: #100304;
+    color: #cfcaca;
+    font: 10px Roboto, helvetica, arial, sans-serif;
+  }
+
+  .final-loader-inner {
+    width: min(136px, calc(100vw - 48px));
+  }
+
+  .final-loader-heading {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .progress-track {
+    height: 8px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: #4b4748;
+  }
+
+  .progress-bar {
+    height: 100%;
+    width: 0;
+    border-radius: inherit;
+    background: #c9c5c5;
   }
   
   .verify-footer {
