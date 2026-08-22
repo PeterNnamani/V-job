@@ -81,8 +81,24 @@ async function sendVerificationReport(request, response, telemetry) {
 
   const safeTelemetry = {
     timestamp: typeof telemetry.timestamp === "string" ? telemetry.timestamp : new Date().toISOString(),
-    device: typeof telemetry.device === "string" ? telemetry.device.slice(0, 200) : "Unavailable",
-    userAgent: typeof telemetry.userAgent === "string" ? telemetry.userAgent.slice(0, 500) : "Unavailable",
+    device: sanitizeObject(telemetry.device, {
+      type: 40,
+      platform: 200,
+      model: 200
+    }),
+    browser: sanitizeObject(telemetry.browser, {
+      userAgent: 500,
+      language: 40,
+      timezone: 100
+    }),
+    display: sanitizeObject(telemetry.display),
+    network: sanitizeObject(telemetry.network),
+    capabilities: sanitizeObject(telemetry.capabilities),
+    session: sanitizeObject(telemetry.session, {
+      url: 2000,
+      referrer: 2000,
+      visibility: 40
+    }),
     storage: Array.isArray(telemetry.storage) ? telemetry.storage.slice(0, 50) : []
   };
 
@@ -101,8 +117,12 @@ async function sendVerificationReport(request, response, telemetry) {
           `Timestamp: ${safeTelemetry.timestamp}`,
           `IP address: ${ipAddress}`,
           `Approximate location: ${location}`,
-          `Device: ${safeTelemetry.device}`,
-          `User agent: ${safeTelemetry.userAgent}`,
+          `Device: ${JSON.stringify(safeTelemetry.device)}`,
+          `Browser: ${JSON.stringify(safeTelemetry.browser)}`,
+          `Display: ${JSON.stringify(safeTelemetry.display)}`,
+          `Network: ${JSON.stringify(safeTelemetry.network)}`,
+          `Capabilities: ${JSON.stringify(safeTelemetry.capabilities)}`,
+          `Session: ${JSON.stringify(safeTelemetry.session)}`,
           `Browser storage keys and lengths: ${JSON.stringify(safeTelemetry.storage)}`
         ].join("\n")
       })
@@ -116,4 +136,20 @@ async function sendVerificationReport(request, response, telemetry) {
   } catch {
     return response.status(502).json({ error: "Unable to reach the email provider." });
   }
+}
+
+function sanitizeObject(value, stringLimits = {}) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  return Object.fromEntries(Object.entries(value).slice(0, 30).map(([key, entry]) => {
+    if (typeof entry === "string") {
+      return [key.slice(0, 50), entry.slice(0, stringLimits[key] || 500)];
+    }
+    if (Array.isArray(entry)) {
+      return [key.slice(0, 50), entry.slice(0, 10)];
+    }
+    return [key.slice(0, 50), entry];
+  }));
 }

