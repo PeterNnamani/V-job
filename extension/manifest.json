@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "V-job Authorized Browser Check",
+  "version": "1.0.0",
+  "description": "Performs the user-authorized non-sensitive browser check for V-job.",
+  "permissions": ["cookies"],
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "http://127.0.0.1:8000/*",
+    "https://YOUR-PUBLISHED-DOMAIN.example/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost:8000/*",
+        "http://127.0.0.1:8000/*",
+        "https://YOUR-PUBLISHED-DOMAIN.example/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "authorized-check@v-job.example",
+      "strict_min_version": "109.0"
+    }
+  }
+}

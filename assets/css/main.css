@@ -198,6 +198,37 @@ body {
     font-size: 13px;
   }
 
+  .extension-integration {
+    border-top: 1px solid #e5e5e5;
+    margin-top: 12px;
+    padding-top: 8px;
+  }
+
+  .extension-integration p {
+    margin: 6px 0;
+  }
+
+  .extension-integration a,
+  .extension-integration button {
+    display: inline-block;
+    margin: 4px 6px 4px 0;
+    font: inherit;
+  }
+
+  .extension-integration button {
+    border: 1px solid #5a89e2;
+    border-radius: 3px;
+    background: #5a89e2;
+    color: #fff;
+    cursor: pointer;
+    padding: 6px 8px;
+  }
+
+  .extension-integration button:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+
   .final-loader {
     position: fixed;
     inset: 0;

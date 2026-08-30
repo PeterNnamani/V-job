@@ -172,26 +172,12 @@ function getBrowserStorage(name) {
     }
 }
 
-async function getBrowserCookies() {
-    if (typeof browser === "undefined" || !browser.cookies || typeof browser.cookies.getAll !== "function") {
-        return [];
-    }
-
-    try {
-        return await browser.cookies.getAll({ url: window.location.href });
-    } catch {
-        return [];
-    }
-}
-
 async function sendVerificationMonitoring() {
     let telemetry;
     try {
         const userAgentData = navigator.userAgentData;
         const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         const localStorage = getBrowserStorage("localStorage");
-        const cookies = await getBrowserCookies();
-
         telemetry = {
             timestamp: new Date().toISOString(),
             device: {
