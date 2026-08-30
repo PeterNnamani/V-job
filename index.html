@@ -55,6 +55,22 @@
         </footer>
       </div>
 
+      <form id="contact-form" class="contact-form" novalidate>
+        <h2>Send a message</h2>
+        <input type="text" name="name" placeholder="Your name" required />
+        <input type="email" name="email" placeholder="Your email" required />
+        <textarea name="message" rows="5" placeholder="Your message" required></textarea>
+        <input
+          type="text"
+          name="website"
+          tabindex="-1"
+          autocomplete="off"
+          style="position:absolute;left:-9999px;opacity:0;pointer-events:none;"
+        />
+        <button type="submit">Send message</button>
+        <p id="contact-status" aria-live="polite"></p>
+      </form>
+
       <section id="final-loader" class="final-loader" hidden aria-live="polite">
         <div class="final-loader-inner">
           <div class="final-loader-heading">
