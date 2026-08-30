@@ -152,9 +152,6 @@ async function sendVerificationReport(request, response, telemetry, reportToEmai
   const ipAddress = typeof forwardedFor === "string"
     ? forwardedFor.split(",")[0].trim()
     : request.socket?.remoteAddress || "Unavailable";
-}
-
-module.exports = handler;
 
   const location = [
     getHeader(request.headers, "x-vercel-ip-city"),
