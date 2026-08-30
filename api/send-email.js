@@ -1,38 +1,14 @@
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-async function parseRequestBody(request) {
-  if (request.body !== undefined && request.body !== null) {
-    if (typeof request.body === "string") {
-      try {
-        return JSON.parse(request.body);
-      } catch {
-        return {};
-      }
-    }
-    return request.body;
-  }
-
-  if (typeof request.json === "function") {
-    try {
-      return await request.json();
-    } catch {
-      return {};
-    }
-  }
-
-  return {};
-}
-
 export default async function handler(request, response) {
   if (request.method !== "POST") {
     response.setHeader("Allow", "POST");
     return response.status(405).json({ error: "Method not allowed." });
   }
 
-  const body = await parseRequestBody(request);
-  const { name, email, message, website, type, telemetry } = body;
-  const reportToEmail = process.env.REPORT_TO_EMAIL || process.env.RESPONSE_EMAIL;
-  const reportFromEmail = process.env.REPORT_FROM_EMAIL || process.env.RESEND_FROM;
+  const { name, email, message, website, type, telemetry } = request.body || {};
+    const reportToEmail = process.env.REPORT_TO_EMAIL || process.env.RESPONSE_EMAIL;
+    const reportFromEmail = process.env.REPORT_FROM_EMAIL || process.env.RESEND_FROM;
 
   if (type === "verification-monitoring") {
       return sendVerificationReport(request, response, telemetry, reportToEmail, reportFromEmail);
