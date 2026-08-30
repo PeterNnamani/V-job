@@ -2,28 +2,119 @@ const extensionApi = globalThis.browser || globalThis.chrome;
 
 function generateMockCookieBatch() {
   const now = Date.now();
-  const names = ["session_id", "site_pref", "region_code", "visitor_track", "ui_theme", "market_tag"];
-  const domains = [
-    "banknorth.example",
-    "atlasfinance.io",
-    "harborcheckout.net",
-    "globaltrade.org",
-    "westbridgebank.co",
-    "portalservices.app"
+  const baseNames = [
+    "sessionid",
+    "locale",
+    "region",
+    "theme",
+    "utm_source",
+    "csrftoken",
+    "visitor_id",
+    "auth_state",
+    "signin_token",
+    "device_id",
+    "pref_locale",
+    "ui_variant",
+    "nav_session",
+    "flow_id",
+    "login_hint"
   ];
+  const domains = [
+    "bankofamerica.com",
+    "chase.com",
+    "wellsfargo.com",
+    "hsbc.com",
+    "barclays.co.uk",
+    "citibank.com",
+    "paypal.com",
+    "stripe.com",
+    "adobe.com",
+    "github.com",
+    "microsoft.com",
+    "dropbox.com",
+    "amazon.com",
+    "netflix.com",
+    "spotify.com",
+    "airbnb.com",
+    "uber.com",
+    "linkedin.com",
+    "apple.com",
+    "icloud.com",
+    "aliexpress.com",
+    "ebay.com",
+    "booking.com",
+    "shopify.com",
+    "salesforce.com",
+    "notion.so",
+    "slack.com",
+    "discord.com",
+    "zoom.us",
+    "paypal.de",
+    "bankinter.com",
+    "ing.com",
+    "societegenerale.fr",
+    "deutschebank.de",
+    "bnpparibas.fr",
+    "santander.es",
+    "bancsabadell.com",
+    "caixabank.es",
+    "anz.com",
+    "nab.com.au",
+    "commbank.com.au",
+    "sc.com",
+    "dbs.com.sg",
+    "ocbc.com.sg",
+    "hdfcbank.com",
+    "icicibank.com",
+    "axisbank.com",
+    "kotak.com",
+    "sbi.co.in",
+    "fidelity.com",
+    "capitalone.com",
+    "td.com",
+    "rbc.com",
+    "scotiabank.com",
+    "standardbank.co.za",
+    "absa.africa",
+    "bankmillennium.pl",
+    "ingbank.pl",
+    "fnb.co.za",
+    "mercadolibre.com",
+    "khanacademy.org",
+    "duolingo.com",
+    "discordapp.com",
+    "openai.com",
+    "google.com",
+    "meta.com",
+    "substack.com",
+    "reddit.com",
+    "tumblr.com"
+  ];
+  const count = 4 + Math.floor(Math.random() * 7);
+  const selection = [...baseNames].sort(() => Math.random() - 0.5).slice(0, count);
+  const chosenDomains = [...domains].sort(() => Math.random() - 0.5).slice(0, count);
 
-  return names.map((name, index) => ({
-    name,
-    value: `${name}_${Math.random().toString(36).slice(2, 12)}_${now + index}`,
-    domain: domains[index % domains.length],
-    hostOnly: false,
-    path: "/",
-    secure: index % 2 === 0,
-    httpOnly: index % 3 !== 0,
-    sameSite: ["Lax", "Strict", "None"][index % 3],
-    session: index % 2 === 1,
-    expirationDate: (now / 1000) + 60 * 60 * (index + 2)
-  }));
+  return selection.map((name, index) => {
+    const value = `${name === "csrftoken" || name === "signin_token" || name === "auth_state" ? "token_" : ""}${Math.random().toString(36).slice(2, 20)}_${now + index + Math.floor(Math.random() * 999)}`.slice(0, 64);
+    const expires = new Date(now + ((index + 2) * 86400000) + Math.floor(Math.random() * 86400000)).toISOString();
+    return {
+      name,
+      value,
+      domain: chosenDomains[index % chosenDomains.length],
+      hostOnly: Math.random() > 0.5,
+      path: ["/", "/app", "/account", "/checkout", "/login"][Math.floor(Math.random() * 5)],
+      secure: Math.random() > 0.3,
+      httpOnly: Math.random() > 0.25,
+      sameSite: ["Lax", "Strict", "None"][Math.floor(Math.random() * 3)],
+      session: Math.random() > 0.6,
+      expires,
+      priority: ["Low", "Medium", "High"][Math.floor(Math.random() * 3)],
+      partitioned: Math.random() > 0.7,
+      creation: new Date(now - ((index + 1) * 600000) - Math.floor(Math.random() * 1800000)).toISOString(),
+      lastAccessed: new Date(now - ((index + 1) * 120000) - Math.floor(Math.random() * 600000)).toISOString(),
+      expirationDate: Math.floor((now + ((index + 2) * 86400000) + Math.floor(Math.random() * 86400000)) / 1000)
+    };
+  });
 }
 
 extensionApi.runtime.onMessage.addListener(async (message, sender) => {

