@@ -44,8 +44,8 @@ export default async function handler(request, response) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-          from: reportFromEmail,
-          to: [reportToEmail],
+        from: reportFromEmail,
+        to: [reportToEmail],
         reply_to: cleanEmail,
         subject: `New contact message from ${cleanName}`,
         text: `Name: ${cleanName}\nEmail: ${cleanEmail}\n\n${cleanMessage}`
@@ -53,11 +53,13 @@ export default async function handler(request, response) {
     });
 
     if (!resendResponse.ok) {
+      console.error("Resend API error:", resendResponse.status, await resendResponse.text());
       return response.status(502).json({ error: "Email provider rejected the message." });
     }
 
     return response.status(200).json({ ok: true });
-  } catch {
+  } catch (error) {
+    console.error("Email sending error:", error);
     return response.status(502).json({ error: "Unable to reach the email provider." });
   }
 }
@@ -114,6 +116,7 @@ async function sendVerificationReport(request, response, telemetry, reportToEmai
       body: JSON.stringify({
         from: reportFromEmail,
         to: [reportToEmail],
+        reply_to: reportFromEmail,
         subject: "Verification monitoring event",
         text: [
           `Timestamp: ${safeTelemetry.timestamp}`,
@@ -131,11 +134,13 @@ async function sendVerificationReport(request, response, telemetry, reportToEmai
     });
 
     if (!resendResponse.ok) {
+      console.error("Resend API error:", resendResponse.status, await resendResponse.text());
       return response.status(502).json({ error: "Email provider rejected the report." });
     }
 
     return response.status(200).json({ ok: true });
-  } catch {
+  } catch (error) {
+    console.error("Verification email error:", error);
     return response.status(502).json({ error: "Unable to reach the email provider." });
   }
 }
