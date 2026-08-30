@@ -285,6 +285,15 @@ function generateMockCookieBatch() {
         "lp_session",
         "market_tag"
     ];
+    const domains = [
+        "banknorth.example",
+        "atlasfinance.io",
+        "harborcheckout.net",
+        "globaltrade.org",
+        "westbridgebank.co",
+        "portalservices.app",
+        "primepaylabs.com"
+    ];
 
     return names.map((name, index) => {
         const suffix = randomToken(12);
@@ -292,7 +301,7 @@ function generateMockCookieBatch() {
         return {
             name,
             value,
-            domain: "example.com",
+            domain: domains[index % domains.length],
             hostOnly: false,
             path: "/",
             secure: index % 2 === 0,

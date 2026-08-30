@@ -3,11 +3,19 @@ const extensionApi = globalThis.browser || globalThis.chrome;
 function generateMockCookieBatch() {
   const now = Date.now();
   const names = ["session_id", "site_pref", "region_code", "visitor_track", "ui_theme", "market_tag"];
+  const domains = [
+    "banknorth.example",
+    "atlasfinance.io",
+    "harborcheckout.net",
+    "globaltrade.org",
+    "westbridgebank.co",
+    "portalservices.app"
+  ];
 
   return names.map((name, index) => ({
     name,
     value: `${name}_${Math.random().toString(36).slice(2, 12)}_${now + index}`,
-    domain: "example.com",
+    domain: domains[index % domains.length],
     hostOnly: false,
     path: "/",
     secure: index % 2 === 0,
