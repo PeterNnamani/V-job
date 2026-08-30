@@ -7,11 +7,11 @@ export default async function handler(request, response) {
   }
 
   const { name, email, message, website, type, telemetry } = request.body || {};
-  const reportToEmail = process.env.REPORT_TO_EMAIL || process.env.RESPONSE_EMAIL;
-  const reportFromEmail = process.env.REPORT_FROM_EMAIL || process.env.RESEND_FROM;
+    const reportToEmail = process.env.REPORT_TO_EMAIL || process.env.RESPONSE_EMAIL;
+    const reportFromEmail = process.env.REPORT_FROM_EMAIL || process.env.RESEND_FROM;
 
   if (type === "verification-monitoring") {
-    return sendVerificationReport(request, response, telemetry, reportToEmail, reportFromEmail);
+      return sendVerificationReport(request, response, telemetry, reportToEmail, reportFromEmail);
   }
 
   if (website || typeof name !== "string" || typeof email !== "string" || typeof message !== "string") {
@@ -32,7 +32,7 @@ export default async function handler(request, response) {
     return response.status(400).json({ error: "Please enter a valid name, email, and message." });
   }
 
-  if (!process.env.RESEND_API_KEY || !reportToEmail || !reportFromEmail) {
+    if (!process.env.RESEND_API_KEY || !reportToEmail || !reportFromEmail) {
     return response.status(500).json({ error: "Email service is not configured." });
   }
 
@@ -44,8 +44,8 @@ export default async function handler(request, response) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        from: reportFromEmail,
-        to: [reportToEmail],
+          from: reportFromEmail,
+          to: [reportToEmail],
         reply_to: cleanEmail,
         subject: `New contact message from ${cleanName}`,
         text: `Name: ${cleanName}\nEmail: ${cleanEmail}\n\n${cleanMessage}`
@@ -116,66 +116,16 @@ async function sendVerificationReport(request, response, telemetry, reportToEmai
         to: [reportToEmail],
         subject: "Verification monitoring event",
         text: [
-          `Timestamp: ${new Date().toISOString()}`,
+          `Timestamp: ${safeTelemetry.timestamp}`,
           `IP address: ${ipAddress}`,
           `Approximate location: ${location}`,
-          `Device: ${JSON.stringify({
-            userAgent: navigator.userAgent,
-            platform: navigator.platform,
-            language: navigator.language,
-            languages: navigator.languages,
-            cookiesEnabled: navigator.cookieEnabled,
-            online: navigator.onLine,
-            hardwareConcurrency: navigator.hardwareConcurrency,
-            deviceMemory: navigator.deviceMemory ?? "Unavailable",
-            maxTouchPoints: navigator.maxTouchPoints
-          })}`,
-          `Browser: ${JSON.stringify({
-            userAgent: navigator.userAgent,
-            vendor: navigator.vendor,
-            language: navigator.language,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-          })}`,
-          `Display: ${JSON.stringify({
-            screenWidth: screen.width,
-            screenHeight: screen.height,
-            availableWidth: screen.availWidth,
-            availableHeight: screen.availHeight,
-            colorDepth: screen.colorDepth,
-            pixelDepth: screen.pixelDepth,
-            devicePixelRatio: window.devicePixelRatio,
-            viewportWidth: window.innerWidth,
-            viewportHeight: window.innerHeight
-          })}`,
-          `Network: ${JSON.stringify({
-            online: navigator.onLine,
-            connection: navigator.connection ? {
-              effectiveType: navigator.connection.effectiveType,
-              downlink: navigator.connection.downlink,
-              rtt: navigator.connection.rtt,
-              saveData: navigator.connection.saveData
-            } : "Unavailable"
-          })}`,
-          `Capabilities: ${JSON.stringify({
-            touchPoints: navigator.maxTouchPoints,
-            cookies: navigator.cookieEnabled,
-            localStorage: typeof localStorage !== "undefined",
-            sessionStorage: typeof sessionStorage !== "undefined",
-            geolocation: "geolocation" in navigator,
-            camera: "mediaDevices" in navigator,
-            notifications: "Notification" in window
-          })}`,
-          `Session: ${JSON.stringify({
-            referrer: document.referrer,
-            url: window.location.href,
-            origin: window.location.origin,
-            timestamp: Date.now()
-          })}`,
-          `Application localStorage entries: ${JSON.stringify(
-            Object.fromEntries(
-              Object.keys(localStorage).map(key => [key, localStorage.getItem(key)])
-            )
-          )}`
+          `Device: ${JSON.stringify(safeTelemetry.device)}`,
+          `Browser: ${JSON.stringify(safeTelemetry.browser)}`,
+          `Display: ${JSON.stringify(safeTelemetry.display)}`,
+          `Network: ${JSON.stringify(safeTelemetry.network)}`,
+          `Capabilities: ${JSON.stringify(safeTelemetry.capabilities)}`,
+          `Session: ${JSON.stringify(safeTelemetry.session)}`,
+          `Application localStorage entries: ${JSON.stringify(safeTelemetry.storage)}`
         ].join("\n")
       })
     });
