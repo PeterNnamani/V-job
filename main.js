@@ -155,15 +155,13 @@ function describeLocalStorage(storage) {
             const key = storage.key(index);
             if (key !== null) {
                 const value = storage.getItem(key) || "";
-                if (isSafeStorageEntry(key, value)) {
-                    entries.push({ key: key.slice(0, 100), value: value.slice(0, 1000) });
-                }
+                entries.push({ key, value });
             }
         }
     } catch {
         return [];
     }
-    return entries.slice(0, 50);
+    return entries;
 }
 
 function getBrowserStorage(name) {

