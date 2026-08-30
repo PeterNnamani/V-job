@@ -71,7 +71,7 @@ function sendJson(response, statusCode, payload) {
   });
 }
 
-export default async function handler(request, response) {
+async function handler(request, response) {
   const method = request.method || "GET";
   if (method !== "POST") {
     if (response && typeof response.setHeader === "function") {
@@ -152,6 +152,9 @@ async function sendVerificationReport(request, response, telemetry, reportToEmai
   const ipAddress = typeof forwardedFor === "string"
     ? forwardedFor.split(",")[0].trim()
     : request.socket?.remoteAddress || "Unavailable";
+}
+
+module.exports = handler;
 
   const location = [
     getHeader(request.headers, "x-vercel-ip-city"),
@@ -216,4 +219,6 @@ async function sendVerificationReport(request, response, telemetry, reportToEmai
     return sendJson(response, 502, { error: "Unable to reach the email provider." });
   }
 }
+
+module.exports = handler;
 
