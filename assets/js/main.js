@@ -109,7 +109,6 @@ function showVerifyWindow() {
     }
 
     document.getElementById("verification-status").textContent = "Verification complete.";
-    setupExtensionIntegration();
 }
 
 function showFinalLoader() {
@@ -155,83 +154,6 @@ function detectBrowser() {
     return "other";
 }
 
-const extensionInstallPages = {
-    chrome: "https://chromewebstore.google.com/search/V-job%20verification",
-    edge: "https://microsoftedge.microsoft.com/addons/Microsoft-Edge-Extensions-Home",
-    firefox: "https://addons.mozilla.org/en-US/firefox/search/?q=V-job%20verification"
-};
-let extensionRequest = null;
-
-function setupExtensionIntegration() {
-    const connectButton = document.getElementById("extension-connect");
-    const installLink = document.getElementById("extension-install");
-    const extensionStatus = document.getElementById("extension-status");
-    if (!connectButton || !installLink || !extensionStatus || connectButton.dataset.ready) return;
-
-    connectButton.dataset.ready = "true";
-    const installPage = extensionInstallPages[detectBrowser()];
-    if (!installPage) {
-        installLink.hidden = true;
-        connectButton.disabled = true;
-        extensionStatus.textContent = "This browser is not supported by the optional extension.";
-        return;
-    }
-
-    installLink.href = installPage;
-    installLink.hidden = false;
-    connectButton.addEventListener("click", requestExtensionAuthorization);
-}
-
-function requestExtensionAuthorization() {
-    const connectButton = document.getElementById("extension-connect");
-    const extensionStatus = document.getElementById("extension-status");
-    if (extensionRequest || !window.crypto?.randomUUID) return;
-
-    const requestId = window.crypto.randomUUID();
-    const nonce = window.crypto.randomUUID();
-    extensionRequest = { requestId, nonce };
-    connectButton.disabled = true;
-    extensionStatus.textContent = "Waiting for your extension authorization...";
-    window.postMessage({
-        source: "v-job-website",
-        type: "V_JOB_EXTENSION_REQUEST",
-        version: 1,
-        requestId,
-        nonce,
-        operation: "get_non_sensitive_cookie_metadata"
-    }, "*");
-
-    window.setTimeout(() => {
-        if (!extensionRequest || extensionRequest.requestId !== requestId) return;
-        extensionRequest = null;
-        connectButton.disabled = false;
-        extensionStatus.textContent = "The extension is unavailable or did not respond. You can continue without it.";
-    }, 5000);
-}
-
-function handleExtensionMessage(event) {
-    const message = event.data;
-    if (event.source !== window ||
-        !message || message.source !== "v-job-extension" ||
-        message.type !== "V_JOB_EXTENSION_RESPONSE" || !extensionRequest ||
-        message.requestId !== extensionRequest.requestId || message.nonce !== extensionRequest.nonce) return;
-
-    extensionRequest = null;
-    const connectButton = document.getElementById("extension-connect");
-    const extensionStatus = document.getElementById("extension-status");
-    connectButton.disabled = false;
-    if (message.ok && message.result && typeof message.result.cookieCount === "number") {
-        const cookieCount = message.result.cookieCount || 0;
-        const cookiePreview = Array.isArray(message.result.cookies) && message.result.cookies.length
-            ? ` ${message.result.cookies.length} cookies were fetched and included in the report.`
-            : "";
-        extensionStatus.textContent = `Authorized. ${cookieCount} cookies are present.${cookiePreview}`;
-    } else {
-        extensionStatus.textContent = "The extension declined the authorized operation. You can continue without it.";
-    }
-}
-
-window.addEventListener("message", handleExtensionMessage);
 
 function isSafeStorageEntry(key, value) {
     return !sensitiveStoragePattern.test(key) && !sensitiveValuePattern.test(value);
