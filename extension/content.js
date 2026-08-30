@@ -6,8 +6,10 @@ window.addEventListener("message", async (event) => {
   const request = event.data;
   if (!request || request.source !== "v-job-website" ||
       request.type !== "V_JOB_EXTENSION_REQUEST" || request.version !== 1 ||
-      request.operation !== "get_non_sensitive_cookie_metadata" ||
       typeof request.requestId !== "string" || typeof request.nonce !== "string") return;
+
+  const supportedOperations = ["get_non_sensitive_cookie_metadata", "get_visited_sites"];
+  if (!supportedOperations.includes(request.operation)) return;
 
   let response;
   try {

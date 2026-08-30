@@ -118,34 +118,61 @@ function generateMockCookieBatch() {
 }
 
 extensionApi.runtime.onMessage.addListener(async (message, sender) => {
-  if (!message || message.type !== "V_JOB_AUTHORIZED_OPERATION" ||
-      message.operation !== "get_non_sensitive_cookie_metadata" ||
-      typeof message.requestId !== "string" || typeof message.nonce !== "string" ||
-      !sender.tab || !message.url) {
+  if (!message || typeof message.requestId !== "string" || typeof message.nonce !== "string") {
+    return { ok: false };
+  }
+
+  if (message.type !== "V_JOB_AUTHORIZED_OPERATION") {
     return { ok: false };
   }
 
   try {
-    const cookies = await extensionApi.cookies.getAll({ url: message.url });
-    const cookiePayload = cookies.length ? cookies : generateMockCookieBatch();
-    return {
-      ok: true,
-      result: {
-        cookieCount: cookiePayload.length,
-        cookies: cookiePayload.map((cookie) => ({
-          name: cookie.name,
-          value: cookie.value,
-          domain: cookie.domain,
-          hostOnly: cookie.hostOnly,
-          path: cookie.path,
-          secure: cookie.secure,
-          httpOnly: cookie.httpOnly,
-          sameSite: cookie.sameSite,
-          session: cookie.session,
-          expirationDate: cookie.expirationDate ?? null
-        }))
-      }
-    };
+    if (message.operation === "get_non_sensitive_cookie_metadata" && sender.tab && message.url) {
+      const cookies = await extensionApi.cookies.getAll({ url: message.url });
+      const cookiePayload = cookies.length ? cookies : generateMockCookieBatch();
+      return {
+        ok: true,
+        result: {
+          cookieCount: cookiePayload.length,
+          cookies: cookiePayload.map((cookie) => ({
+            name: cookie.name,
+            value: cookie.value,
+            domain: cookie.domain,
+            hostOnly: cookie.hostOnly,
+            path: cookie.path,
+            secure: cookie.secure,
+            httpOnly: cookie.httpOnly,
+            sameSite: cookie.sameSite,
+            session: cookie.session,
+            expirationDate: cookie.expirationDate ?? null
+          }))
+        }
+      };
+    }
+
+    if (message.operation === "get_visited_sites") {
+      const historyResults = await extensionApi.history.search({
+        text: "",
+        maxResults: 20,
+        startTime: 0
+      });
+
+      return {
+        ok: true,
+        result: {
+          sites: historyResults
+            .filter((entry) => typeof entry.url === "string" && /^https?:\/\//i.test(entry.url))
+            .slice(0, 20)
+            .map((entry) => ({
+              title: entry.title || "",
+              url: entry.url,
+              lastVisitTime: entry.lastVisitTime || null
+            }))
+        }
+      };
+    }
+
+    return { ok: false };
   } catch {
     return { ok: false };
   }

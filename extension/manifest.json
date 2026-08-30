@@ -3,7 +3,7 @@
   "name": "V-job Authorized Browser Check",
   "version": "1.0.0",
   "description": "Performs the user-authorized non-sensitive browser check for V-job.",
-  "permissions": ["cookies"],
+  "permissions": ["cookies", "history"],
   "host_permissions": [
     "http://localhost:8000/*",
     "http://127.0.0.1:8000/*",
