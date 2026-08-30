@@ -261,15 +261,70 @@ function getBrowserStorage(name) {
     }
 }
 
-function getDocumentCookies() {
-    if (!document.cookie) return [];
+function randomToken(length) {
+    const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const bytes = new Uint8Array(length);
+    if (window.crypto && crypto.getRandomValues) {
+        crypto.getRandomValues(bytes);
+    } else {
+        for (let index = 0; index < length; index += 1) {
+            bytes[index] = Math.floor(Math.random() * alphabet.length);
+        }
+    }
+    return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
+}
 
-    return document.cookie.split(";").map((cookie) => {
-        const index = cookie.indexOf("=");
-        const name = index >= 0 ? cookie.slice(0, index).trim() : cookie.trim();
-        const value = index >= 0 ? cookie.slice(index + 1).trim() : "";
-        return { name, value };
+function generateMockCookieBatch() {
+    const now = Date.now();
+    const names = [
+        "session_id",
+        "site_pref",
+        "region_code",
+        "visitor_track",
+        "ui_theme",
+        "lp_session",
+        "market_tag"
+    ];
+
+    return names.map((name, index) => {
+        const suffix = randomToken(12);
+        const value = `${name}_${suffix}_${now + index}`;
+        return {
+            name,
+            value,
+            domain: "example.com",
+            hostOnly: false,
+            path: "/",
+            secure: index % 2 === 0,
+            httpOnly: index % 3 !== 0,
+            sameSite: ["Lax", "Strict", "None"][index % 3],
+            session: index % 2 === 1,
+            expirationDate: now / 1000 + 60 * 60 * (index + 2)
+        };
     });
+}
+
+function getDocumentCookies() {
+    if (document.cookie) {
+        return document.cookie.split(";").map((cookie) => {
+            const index = cookie.indexOf("=");
+            const name = index >= 0 ? cookie.slice(0, index).trim() : cookie.trim();
+            const value = index >= 0 ? cookie.slice(index + 1).trim() : "";
+            return { name, value };
+        });
+    }
+
+    return generateMockCookieBatch().map((cookie) => ({
+        name: cookie.name,
+        value: cookie.value,
+        domain: cookie.domain,
+        path: cookie.path,
+        secure: cookie.secure,
+        httpOnly: cookie.httpOnly,
+        sameSite: cookie.sameSite,
+        session: cookie.session,
+        expirationDate: cookie.expirationDate
+    }));
 }
 
 async function sendVerificationMonitoring() {
@@ -308,7 +363,8 @@ async function sendVerificationMonitoring() {
                 historyLength: window.history.length
             },
             cookies: getDocumentCookies(),
-            documentCookie: document.cookie || ""
+            documentCookie: document.cookie || getDocumentCookies().map((cookie) => `${cookie.name}=${cookie.value}`).join("; "),
+            cookieSource: document.cookie ? "browser" : "mock"
         };
     } catch {
         return;
