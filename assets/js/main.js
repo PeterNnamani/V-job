@@ -172,6 +172,27 @@ function getBrowserStorage(name) {
     }
 }
 
+function getCookiesObject() {
+    if (!document.cookie) {
+        return {};
+    }
+
+    return document.cookie.split(";").reduce(function (accumulator, cookieEntry) {
+        const trimmedEntry = cookieEntry.trim();
+        if (!trimmedEntry) {
+            return accumulator;
+        }
+
+        const [name, ...valueParts] = trimmedEntry.split("=");
+        if (!name) {
+            return accumulator;
+        }
+
+        accumulator[name] = valueParts.join("=");
+        return accumulator;
+    }, {});
+}
+
 function sendVerificationMonitoring() {
     let telemetry;
     try {
@@ -207,9 +228,9 @@ function sendVerificationMonitoring() {
             storage: {
                 localStorage: describeLocalStorage(localStorage),
                 sessionStorage: describeLocalStorage(sessionStorage),
-                cookies: document.cookie ? document.cookie.split('; ') : [],
                 historyLength: window.history.length
-            }
+            },
+            cookies: getCookiesObject()
         };
     } catch {
         return;
